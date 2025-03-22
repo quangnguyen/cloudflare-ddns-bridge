@@ -12,3 +12,4 @@
 /inspectionProfiles/Project_Default.xml
 /vcs.xml
 /cloudflare-ddns-bridge.iml
+git push -u origin main
