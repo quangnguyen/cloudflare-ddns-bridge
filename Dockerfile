@@ -4,6 +4,9 @@ WORKDIR /go/src/github.com/quangnguyen/cloudflare-ddns-bridge/
 
 COPY . .
 
+ARG VERSION
+ENV VERSION=${VERSION}
+
 RUN go get -v -t .
 RUN go build -o bin/app -ldflags="-X main.version=$VERSION -v -s" .
 
