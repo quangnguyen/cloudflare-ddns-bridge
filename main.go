@@ -2,11 +2,12 @@ package main
 
 import (
 	"cloudflare-dns-bridge/internal/config"
-	http2 "cloudflare-dns-bridge/internal/http"
+	handler "cloudflare-dns-bridge/internal/http"
 	"cloudflare-dns-bridge/internal/logger"
 	"cloudflare-dns-bridge/internal/util"
 	"errors"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	"os"
 	"time"
@@ -24,7 +25,9 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/nic/update", http2.DdnsRequestHandlerFunc(cfg))
+	mux.HandleFunc("/nic/update", handler.DdnsRequestHandlerFunc(cfg))
+	mux.HandleFunc("/health", handler.HealthCheckRequestHandler)
+	mux.Handle("/metrics", promhttp.Handler())
 
 	server := &http.Server{
 		Addr:         cfg.ServerHTTPPort,

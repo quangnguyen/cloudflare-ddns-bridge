@@ -9,7 +9,7 @@ import (
 var Logger *slog.Logger
 
 func init() {
-	Logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: getLogLevel()}))
+	Logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: getLogLevel()}))
 	slog.SetDefault(Logger)
 }
 
