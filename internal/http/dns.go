@@ -16,18 +16,6 @@ func DdnsRequestHandlerFunc(cfg *config.Config) http.HandlerFunc {
 	return authenticate(cfg, handleDNSUpdate(cfg))
 }
 
-func authenticate(cfg *config.Config, next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		user, pass, ok := r.BasicAuth()
-		if !ok || user != cfg.Username || pass != cfg.Password {
-			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		next.ServeHTTP(w, r)
-	}
-}
-
 func handleDNSUpdate(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Logger.Debug("Received request",
@@ -50,7 +38,6 @@ func handleDNSUpdate(cfg *config.Config) http.HandlerFunc {
 			return
 		}
 
-		// Log query parameters
 		queryParams := r.URL.Query()
 		for key, values := range queryParams {
 			logger.Logger.Debug("Query Parameter", "key", key, "values", values)

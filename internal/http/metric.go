@@ -1,7 +1,11 @@
 package http
 
 import (
+	"cloudflare-dns-bridge/internal/config"
+	"cloudflare-dns-bridge/internal/logger"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"net/http"
 	"sync"
 )
 
@@ -31,4 +35,21 @@ var (
 
 func init() {
 	prometheus.MustRegister(totalRequests, ipChangeCount, currentIPGauge)
+}
+
+func HealthMetricsRequestHandler(cfg *config.Config) http.HandlerFunc {
+	if cfg.SecuredMetricsAPI {
+		return authenticate(cfg, handleMetricsRequest)
+	}
+
+	return handleMetricsRequest
+}
+
+func handleMetricsRequest(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Debug("Metrics request",
+		"method", r.Method,
+		"url", r.URL.String(),
+	)
+
+	promhttp.Handler().ServeHTTP(w, r)
 }
