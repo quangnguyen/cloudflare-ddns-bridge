@@ -2,7 +2,7 @@ package main
 
 import (
 	"cloudflare-dns-bridge/internal/config"
-	http2 "cloudflare-dns-bridge/internal/http"
+	handler "cloudflare-dns-bridge/internal/http"
 	"cloudflare-dns-bridge/internal/logger"
 	"cloudflare-dns-bridge/internal/util"
 	"errors"
@@ -24,7 +24,9 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/nic/update", http2.DdnsRequestHandlerFunc(cfg))
+	mux.HandleFunc("/nic/update", handler.DdnsRequestHandlerFunc(cfg))
+	mux.HandleFunc("/health", handler.HealthCheckRequestHandler)
+	mux.HandleFunc("/metrics", handler.HealthMetricsRequestHandler(cfg))
 
 	server := &http.Server{
 		Addr:         cfg.ServerHTTPPort,
@@ -43,8 +45,10 @@ func main() {
 func loadConfig() (*config.Config, error) {
 	requiredEnv := []string{"USERNAME", "PASSWORD", "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ZONE_ID", "CLOUDFLARE_RECORD_ID"}
 	appConfig := &config.Config{
-		Username:             os.Getenv("USERNAME"),
-		Password:             os.Getenv("PASSWORD"),
+		Username:          os.Getenv("USERNAME"),
+		Password:          os.Getenv("PASSWORD"),
+		SecuredMetricsAPI: util.GetEnvAsBoolOrDefault("SECURED_METRICS_API", true),
+
 		CloudflareAPIToken:   os.Getenv("CLOUDFLARE_API_TOKEN"),
 		CloudflareZoneID:     os.Getenv("CLOUDFLARE_ZONE_ID"),
 		CloudflareRecordID:   os.Getenv("CLOUDFLARE_RECORD_ID"),

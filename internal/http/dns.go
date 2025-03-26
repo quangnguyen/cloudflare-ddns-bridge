@@ -12,19 +12,8 @@ import (
 )
 
 func DdnsRequestHandlerFunc(cfg *config.Config) http.HandlerFunc {
+	totalRequests.WithLabelValues("/nic/update").Inc()
 	return authenticate(cfg, handleDNSUpdate(cfg))
-}
-
-func authenticate(cfg *config.Config, next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		user, pass, ok := r.BasicAuth()
-		if !ok || user != cfg.Username || pass != cfg.Password {
-			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		next.ServeHTTP(w, r)
-	}
 }
 
 func handleDNSUpdate(cfg *config.Config) http.HandlerFunc {
@@ -49,24 +38,23 @@ func handleDNSUpdate(cfg *config.Config) http.HandlerFunc {
 			return
 		}
 
-		// Log query parameters
 		queryParams := r.URL.Query()
 		for key, values := range queryParams {
 			logger.Logger.Debug("Query Parameter", "key", key, "values", values)
 		}
 
 		hostname := queryParams.Get("hostname")
-		ipAddress := queryParams.Get("ip")
+		newIP := queryParams.Get("ip")
 
-		if hostname == "" || ipAddress == "" {
+		if hostname == "" || newIP == "" {
 			http.Error(w, "Missing required parameters: hostname and ip", http.StatusBadRequest)
-			logger.Logger.Warn("Missing required parameters", "hostname", hostname, "ipAddress", ipAddress)
+			logger.Logger.Warn("Missing required parameters", "hostname", hostname, "ip", newIP)
 			return
 		}
 
-		if net.ParseIP(ipAddress) == nil {
+		if net.ParseIP(newIP) == nil {
 			http.Error(w, "Invalid IP address format", http.StatusBadRequest)
-			logger.Logger.Warn("Invalid IP address format", "ipAddress", ipAddress)
+			logger.Logger.Warn("Invalid IP address format", "ip", newIP)
 			return
 		}
 
@@ -97,7 +85,7 @@ func handleDNSUpdate(cfg *config.Config) http.HandlerFunc {
 		update := cloudflare.DNSRecordUpdate{
 			Type:    cfg.CloudflareRecordType,
 			Name:    hostname,
-			Content: ipAddress,
+			Content: newIP,
 			TTL:     ttl,
 			Proxied: proxied,
 		}
@@ -117,6 +105,17 @@ func handleDNSUpdate(cfg *config.Config) http.HandlerFunc {
 		if err := json.NewEncoder(w).Encode(response.Result); err != nil {
 			http.Error(w, "Error encoding response", http.StatusInternalServerError)
 			logger.Logger.Error("Error encoding response", "error", err)
+		}
+
+		if newIP != "" {
+			mu.Lock()
+			if newIP != currentIP {
+				currentIP = newIP
+				ipChangeCount.Inc()
+				currentIPGauge.Reset()
+				currentIPGauge.WithLabelValues(newIP).Set(1)
+			}
+			mu.Unlock()
 		}
 	}
 }

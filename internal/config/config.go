@@ -1,9 +1,10 @@
 package config
 
 type Config struct {
-	Username       string
-	Password       string
-	ServerHTTPPort string
+	Username          string
+	Password          string
+	SecuredMetricsAPI bool
+	ServerHTTPPort    string
 
 	CloudflareAPIToken   string
 	CloudflareZoneID     string

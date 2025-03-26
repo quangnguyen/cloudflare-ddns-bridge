@@ -16,6 +16,7 @@ A lightweight Go application that acts as a bridge between your FritzBox router 
 | `CLOUDFLARE_PROXIED`     | No       | `true`  | Enable Cloudflare proxy (`true`/`false`)                  |
 | `USERNAME`               | Yes      | -       | HTTP Basic Auth username                                  |
 | `PASSWORD`               | Yes      | -       | HTTP Basic Auth password                                  |
+| `SECURED_METRICS_API`    | No       | `true`  | Secure api /metrics with basic auth                       |
 | `HTTP_PORT`              | No       | `8080`  | Port to listen on                                         |
 
 
