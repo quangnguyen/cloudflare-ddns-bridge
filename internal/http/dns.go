@@ -106,16 +106,5 @@ func handleDNSUpdate(cfg *config.Config) http.HandlerFunc {
 			http.Error(w, "Error encoding response", http.StatusInternalServerError)
 			logger.Logger.Error("Error encoding response", "error", err)
 		}
-
-		if newIP != "" {
-			mu.Lock()
-			if newIP != currentIP {
-				currentIP = newIP
-				ipChangeCount.Inc()
-				currentIPGauge.Reset()
-				currentIPGauge.WithLabelValues(newIP).Set(1)
-			}
-			mu.Unlock()
-		}
 	}
 }
