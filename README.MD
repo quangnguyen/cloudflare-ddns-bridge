@@ -38,7 +38,7 @@ docker run -d \
 2. Navigate to: **Internet > Permit Access > DynDNS**.
 3. Configure as follows:
     - **DynDNS Provider:** User-defined
-    - **Update-URL:** `http://[BRIDGE_IP_OR_HOSTNAME]:[PORT]/nic/update?ip=<ipaddr>&hostname=yourhost.local`
+    - **Update-URL:** `http://[BRIDGE_IP_OR_HOSTNAME]:[PORT]/nic/update?ip=<ipaddr>&hostname=yourhost.local&proxied=true`
     - **Domain name:** Any value (not used by bridge)
     - **Username:** same as `USERNAME` from environment
     - **Password:** same as `PASSWORD` from environment  
