@@ -20,7 +20,7 @@ var (
 )
 
 func StartIPUpdateCron(cfg *config.Config) {
-	logger.Logger.Info("IP update cron job started",
+	logger.Logger.Info("Cron - IP update cron job started",
 		"initialDelay", cfg.CronIPUpdateInitialDelay,
 		"interval", cfg.CronIPUpdateInterval,
 		"hostname", cfg.CronHostname,
@@ -46,7 +46,7 @@ func startRegularUpdates(cfg *config.Config) {
 func updateIPAddress(cfg *config.Config) {
 	ipAddress, err := getCurrentIP(cfg)
 	if err != nil {
-		logger.Logger.Error("Failed to get current IP", "error", err)
+		logger.Logger.Error("Cron - Failed to get current IP", "error", err)
 		return
 	}
 
@@ -64,13 +64,15 @@ func updateIPAddress(cfg *config.Config) {
 		}
 
 		if _, err = cloudflare.UpdateCloudflareDNSRecord(cfg, update); err != nil {
-			logger.Logger.Error("Failed to update Cloudflare DNS", "error", err, "ip", ipAddress)
+			logger.Logger.Error("Cron - Failed to update Cloudflare DNS", "error", err, "ip", ipAddress)
 			return
 		}
 
 		ipMutex.Lock()
 		lastDetectedIP = ipAddress
 		ipMutex.Unlock()
+	} else {
+		logger.Logger.Info("Cron - IP address is already up to date", "ip", ipAddress)
 	}
 }
 
