@@ -2,6 +2,7 @@ package main
 
 import (
 	"cloudflare-dns-bridge/internal/config"
+	"cloudflare-dns-bridge/internal/cron"
 	handler "cloudflare-dns-bridge/internal/http"
 	"cloudflare-dns-bridge/internal/logger"
 	"cloudflare-dns-bridge/internal/util"
@@ -21,6 +22,10 @@ func main() {
 	if err != nil {
 		logger.Logger.Error("Configuration error: %v", err)
 		os.Exit(1)
+	}
+
+	if cfg.CronIPUpdateEnable {
+		cron.StartIPUpdateCron(cfg)
 	}
 
 	mux := http.NewServeMux()
@@ -56,6 +61,13 @@ func loadConfig() (*config.Config, error) {
 		CloudflareTTL:        util.GetEnvAsIntOrDefault("CLOUDFLARE_RECORD_TTL", 300),
 		CloudflareProxied:    util.GetEnvAsBoolOrDefault("CLOUDFLARE_PROXIED", true),
 		ServerHTTPPort:       fmt.Sprintf(":%s", util.GetEnvOrDefault("HTTP_PORT", "8080")),
+
+		CronIPUpdateEnable:               util.GetEnvAsBoolOrDefault("CRON_IP_UPDATE_ENABLE", false),
+		CronIPUpdateInitialDelay:         util.GetEnvAsIntOrDefault("CRON_IP_UPDATE_INITIAL_DELAY", 5),
+		CronIPUpdateInterval:             util.GetEnvAsIntOrDefault("CRON_IP_UPDATE_INTERVAL", 3600),
+		CronPublicIpAPI:                  os.Getenv("PUBLIC_IP_API"),
+		CronPublicIpAPIResponseAttribute: os.Getenv("PUBLIC_IP_API_RESPONSE_ATTRIBUTE"),
+		CronHostname:                     os.Getenv("HOSTNAME_FOR_IP"),
 	}
 
 	var missingEnv []string

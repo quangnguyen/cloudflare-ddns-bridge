@@ -12,4 +12,11 @@ type Config struct {
 	CloudflareRecordType string
 	CloudflareTTL        int
 	CloudflareProxied    bool
+
+	CronIPUpdateEnable               bool
+	CronIPUpdateInitialDelay         int // in seconds
+	CronIPUpdateInterval             int // in seconds
+	CronPublicIpAPI                  string
+	CronPublicIpAPIResponseAttribute string
+	CronHostname                     string
 }
