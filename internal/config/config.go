@@ -18,5 +18,10 @@ type Config struct {
 	CronIPUpdateInterval             int // in seconds
 	CronPublicIpAPI                  string
 	CronPublicIpAPIResponseAttribute string
-	CronHostname                     string
+	CronHostnames                    map[string]HostnameConfig
+}
+
+type HostnameConfig struct {
+	Proxied  bool
+	RecordID string
 }

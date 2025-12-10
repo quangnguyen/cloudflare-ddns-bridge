@@ -23,7 +23,7 @@ func StartIPUpdateCron(cfg *config.Config) {
 	logger.Logger.Info("Cron - IP update cron job started",
 		"initialDelay", cfg.CronIPUpdateInitialDelay,
 		"interval", cfg.CronIPUpdateInterval,
-		"hostname", cfg.CronHostname,
+		"hostnames", cfg.CronHostnames,
 		"ipAPI", cfg.CronPublicIpAPI)
 
 	initialDelay := time.Duration(cfg.CronIPUpdateInitialDelay) * time.Second
@@ -55,17 +55,20 @@ func updateIPAddress(cfg *config.Config) {
 	ipMutex.RUnlock()
 
 	if shouldUpdate {
-		update := cloudflare.DNSRecordUpdate{
-			Type:    cfg.CloudflareRecordType,
-			Name:    cfg.CronHostname,
-			Content: ipAddress,
-			TTL:     cfg.CloudflareTTL,
-			Proxied: cfg.CloudflareProxied,
-		}
+		for hostname, hostnameConfig := range cfg.CronHostnames {
+			update := cloudflare.DNSRecordUpdate{
+				Type:    cfg.CloudflareRecordType,
+				Name:    hostname,
+				Content: ipAddress,
+				TTL:     cfg.CloudflareTTL,
+				Proxied: hostnameConfig.Proxied,
+				ID:      hostnameConfig.RecordID,
+			}
 
-		if _, err = cloudflare.UpdateCloudflareDNSRecord(cfg, update); err != nil {
-			logger.Logger.Error("Cron - Failed to update Cloudflare DNS", "error", err, "ip", ipAddress)
-			return
+			if _, err = cloudflare.UpdateCloudflareDNSRecord(cfg, update); err != nil {
+				logger.Logger.Error("Cron - Failed to update Cloudflare DNS", "error", err, "ip", ipAddress)
+				return
+			}
 		}
 
 		ipMutex.Lock()

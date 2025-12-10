@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -67,7 +68,7 @@ func loadConfig() (*config.Config, error) {
 		CronIPUpdateInterval:             util.GetEnvAsIntOrDefault("CRON_IP_UPDATE_INTERVAL", 3600),
 		CronPublicIpAPI:                  os.Getenv("PUBLIC_IP_API"),
 		CronPublicIpAPIResponseAttribute: os.Getenv("PUBLIC_IP_API_RESPONSE_ATTRIBUTE"),
-		CronHostname:                     os.Getenv("HOSTNAME_FOR_IP"),
+		CronHostnames:                    parseHostnames(os.Getenv("HOSTNAMES_FOR_IP")),
 	}
 
 	var missingEnv []string
@@ -82,4 +83,88 @@ func loadConfig() (*config.Config, error) {
 	}
 
 	return appConfig, nil
+}
+
+func parseHostnames(hostnamesStr string) map[string]config.HostnameConfig {
+	hostnames := make(map[string]config.HostnameConfig)
+
+	if hostnamesStr == "" {
+		return hostnames
+	}
+
+	parts := strings.Split(hostnamesStr, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+
+		subParts := strings.Split(part, ":")
+
+		switch len(subParts) {
+		case 1:
+			hostname := strings.TrimSpace(subParts[0])
+			if hostname != "" {
+				hostnames[hostname] = config.HostnameConfig{
+					Proxied:  true,
+					RecordID: "",
+				}
+			}
+
+		case 2:
+			hostname := strings.TrimSpace(subParts[0])
+			proxiedStr := strings.TrimSpace(subParts[1])
+
+			if hostname != "" {
+				proxied := false
+				proxiedStrLower := strings.ToLower(proxiedStr)
+				if proxiedStrLower == "true" || proxiedStrLower == "t" || proxiedStr == "1" {
+					proxied = true
+				}
+
+				hostnames[hostname] = config.HostnameConfig{
+					Proxied:  proxied,
+					RecordID: "",
+				}
+			}
+
+		case 3:
+			// Format: "hostname:proxied:recordID"
+			hostname := strings.TrimSpace(subParts[0])
+			proxiedStr := strings.TrimSpace(subParts[1])
+			recordID := strings.TrimSpace(subParts[2])
+
+			if hostname != "" && recordID != "" {
+				proxied := false
+				proxiedStrLower := strings.ToLower(proxiedStr)
+				if proxiedStrLower == "true" || proxiedStrLower == "t" || proxiedStr == "1" {
+					proxied = true
+				}
+
+				hostnames[hostname] = config.HostnameConfig{
+					Proxied:  proxied,
+					RecordID: recordID,
+				}
+			} else if hostname != "" {
+				// Hostname without record ID
+				proxied := false
+				proxiedStrLower := strings.ToLower(proxiedStr)
+				if proxiedStrLower == "true" || proxiedStrLower == "t" || proxiedStr == "1" {
+					proxied = true
+				}
+
+				hostnames[hostname] = config.HostnameConfig{
+					Proxied:  proxied,
+					RecordID: "",
+				}
+			}
+
+		default:
+			logger.Logger.Warn("Cron - Invalid hostname format, skipping",
+				"part", part,
+				"expected_formats", "hostname, hostname:proxied, or hostname:proxied:recordID")
+		}
+	}
+
+	return hostnames
 }

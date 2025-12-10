@@ -15,6 +15,7 @@ type DNSRecordUpdate struct {
 	Content string `json:"content"`
 	TTL     int    `json:"ttl"`
 	Proxied bool   `json:"proxied,omitempty"`
+	ID      string
 }
 
 type DNSResponse struct {
@@ -41,7 +42,12 @@ func UpdateCloudflareDNSRecord(cfg *config.Config, update DNSRecordUpdate) (*DNS
 		return nil, fmt.Errorf("error marshaling request body: %w", err)
 	}
 
-	url := fmt.Sprintf("https://api.cloudflare.com/client/v4/zones/%s/dns_records/%s", cfg.CloudflareZoneID, cfg.CloudflareRecordID)
+	recordId := update.ID
+	if recordId == "" {
+		recordId = cfg.CloudflareRecordID
+	}
+
+	url := fmt.Sprintf("https://api.cloudflare.com/client/v4/zones/%s/dns_records/%s", cfg.CloudflareZoneID, recordId)
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
