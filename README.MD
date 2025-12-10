@@ -39,7 +39,7 @@ docker run -d \
 3. Configure as follows:
     - **DynDNS Provider:** User-defined
     - **Update-URL:** 
-      - Single host: `http://[BRIDGE_IP_OR_HOSTNAME]:[PORT]/nic/update?ip=<ipaddr>&hostname=yourhost.local`
+      - Single host: `http://[BRIDGE_IP_OR_HOSTNAME]:[PORT]/nic/update?ip=<ipaddr>&hostname=yourhost.local&proxied=true`
       - Multiple hosts: `http://[BRIDGE_IP_OR_HOSTNAME]:[PORT]/nic/bulk/update?ip=<ipaddr>&hostnames=hostone.local:P,vpn.hostone.local`
     - **Domain name:** Any value (not used by bridge)
     - **Username:** same as `USERNAME` from environment
