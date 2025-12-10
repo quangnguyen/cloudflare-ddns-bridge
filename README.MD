@@ -13,7 +13,7 @@ A lightweight Go application that acts as a bridge between your FritzBox router 
 | `CLOUDFLARE_RECORD_ID`   | Yes      | -       | DNS Record ID to update                                   |
 | `CLOUDFLARE_RECORD_TYPE` | No       | `A`     | DNS Record type (`A` or `AAAA`)                           |
 | `CLOUDFLARE_RECORD_TTL`  | No       | `300`   | DNS TTL in seconds (`120-86400`)                          |
-| `CLOUDFLARE_PROXIED`     | No       | `true`  | Enable Cloudflare proxy (`true`/`false`)                  |
+| `CLOUDFLARE_PROXIED`     | No       | `false` | Enable Cloudflare proxy (`true`/`false`)                  |
 | `USERNAME`               | Yes      | -       | HTTP Basic Auth username                                  |
 | `PASSWORD`               | Yes      | -       | HTTP Basic Auth password                                  |
 | `SECURED_METRICS_API`    | No       | `true`  | Secure api /metrics with basic auth                       |
@@ -38,7 +38,9 @@ docker run -d \
 2. Navigate to: **Internet > Permit Access > DynDNS**.
 3. Configure as follows:
     - **DynDNS Provider:** User-defined
-    - **Update-URL:** `http://[BRIDGE_IP_OR_HOSTNAME]:[PORT]/nic/update?ip=<ipaddr>&hostname=yourhost.local`
+    - **Update-URL:** 
+      - Single host: `http://[BRIDGE_IP_OR_HOSTNAME]:[PORT]/nic/update?ip=<ipaddr>&hostname=yourhost.local`
+      - Multiple hosts: `http://[BRIDGE_IP_OR_HOSTNAME]:[PORT]/nic/bulk/update?ip=<ipaddr>&hostnames=hostone.local:P,vpn.hostone.local`
     - **Domain name:** Any value (not used by bridge)
     - **Username:** same as `USERNAME` from environment
     - **Password:** same as `PASSWORD` from environment  

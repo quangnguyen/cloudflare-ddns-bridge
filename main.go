@@ -25,6 +25,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/nic/update", handler.DdnsRequestHandlerFunc(cfg))
+	mux.HandleFunc("/nic/bulk/update", handler.DdnsRequestBulkHandlerFunc(cfg))
 	mux.HandleFunc("/health", handler.HealthCheckRequestHandler)
 	mux.HandleFunc("/metrics", handler.HealthMetricsRequestHandler(cfg))
 
@@ -54,7 +55,7 @@ func loadConfig() (*config.Config, error) {
 		CloudflareRecordID:   os.Getenv("CLOUDFLARE_RECORD_ID"),
 		CloudflareRecordType: util.GetEnvOrDefault("CLOUDFLARE_RECORD_TYPE", "A"),
 		CloudflareTTL:        util.GetEnvAsIntOrDefault("CLOUDFLARE_RECORD_TTL", 300),
-		CloudflareProxied:    util.GetEnvAsBoolOrDefault("CLOUDFLARE_PROXIED", true),
+		CloudflareProxied:    util.GetEnvAsBoolOrDefault("CLOUDFLARE_PROXIED", false),
 		ServerHTTPPort:       fmt.Sprintf(":%s", util.GetEnvOrDefault("HTTP_PORT", "8080")),
 	}
 
